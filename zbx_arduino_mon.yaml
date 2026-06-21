@@ -1,0 +1,115 @@
+zabbix_export:
+  version: '7.4'
+  template_groups:
+    - uuid: 3dcd5bbe90534f9e8eb5c2d53756af63
+      name: Templates/Power
+  templates:
+    - uuid: 3410a2c1b4f3435498d56075903f6744
+      template: 'Arduino UPS Monitor'
+      name: 'Arduino UPS Monitor'
+      description: 'мониторинг состояния батареи и сети 220В'
+      groups:
+        - name: Templates/Power
+      items:
+        - uuid: 5d19c3cb42ad4315a66731660c8776a2
+          name: 'UPS Battery Voltage'
+          type: DEPENDENT
+          key: ups.battv
+          value_type: FLOAT
+          units: V
+          preprocessing:
+            - type: REGEX
+              parameters:
+                - 'BATTV=([0-9.]+)'
+                - \1
+          master_item:
+            key: ups.raw
+        - uuid: a0ae6b66225740e28f325efedeb80225
+          name: 'UPS Line Voltage'
+          type: DEPENDENT
+          key: ups.linev
+          units: V
+          preprocessing:
+            - type: REGEX
+              parameters:
+                - 'LINEV=([0-9]+)'
+                - \1
+          master_item:
+            key: ups.raw
+          triggers:
+            - uuid: f2cf9ff5a0184b2c8d476cffa099fb5f
+              expression: 'last(/Arduino UPS Monitor/ups.linev)=0'
+              name: 'UPS: Main power failure (LINEV=0) отключено питание 220В'
+              priority: HIGH
+        - uuid: 9ee3f951607c405fa31ffd68d6b632f0
+          name: 'UPS Raw Data'
+          type: SNMP_AGENT
+          snmp_oid: .1.3.6.1.4.1.2021.50.101.1
+          key: ups.raw
+          delay: 10s
+          value_type: TEXT
+        - uuid: f8fc7420c24843ba8db4e8ebb58d8cfc
+          name: 'UPS Status'
+          type: DEPENDENT
+          key: ups.status
+          value_type: CHAR
+          preprocessing:
+            - type: REGEX
+              parameters:
+                - ^(ONLINE|ONBATT)
+                - \1
+          master_item:
+            key: ups.raw
+      dashboards:
+        - uuid: d2ca764e03df4bcba93854eb473a6143
+          name: 'Статус ИБП'
+          pages:
+            - widgets:
+                - type: item
+                  width: '16'
+                  height: '3'
+                  hide_header: 'YES'
+                  fields:
+                    - type: ITEM
+                      name: itemid.0
+                      value:
+                        host: 'Arduino UPS Monitor'
+                        key: ups.status
+                    - type: INTEGER
+                      name: show.0
+                      value: '1'
+                    - type: INTEGER
+                      name: show.1
+                      value: '2'
+                    - type: INTEGER
+                      name: show.2
+                      value: '4'
+                - type: svggraph
+                  name: 'График напряжения для UPS'
+                  x: '16'
+                  width: '44'
+                  height: '5'
+                  fields:
+                    - type: INTEGER
+                      name: ds.0.color_palette
+                      value: '0'
+                    - type: INTEGER
+                      name: ds.0.fill
+                      value: '0'
+                    - type: STRING
+                      name: ds.0.items.0
+                      value: 'UPS Battery Voltage'
+                    - type: STRING
+                      name: ds.0.items.1
+                      value: 'UPS Line Voltage'
+                    - type: STRING
+                      name: reference
+                      value: MITON
+                    - type: INTEGER
+                      name: righty
+                      value: '0'
+  triggers:
+    - uuid: 29f4d63c800e43d5abbfdf9abac40de3
+      expression: 'last(/Arduino UPS Monitor/ups.linev)=0 and last(/Arduino UPS Monitor/ups.battv)<11.5'
+      name: 'UPS: Battery level is critical! (низкий уровень заряда АКБ)'
+      priority: DISASTER
