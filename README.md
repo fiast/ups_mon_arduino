@@ -15,6 +15,7 @@
 ```bash
 apk update
 apk add snmpd
+скопируйте файл ups_mon в папку /usr/bin/, дайте права chmod +x /usr/bin/ups_mon
 ```
 
 ### 2. Конфигурация `/etc/config/snmpd`
@@ -30,8 +31,8 @@ config agent
 # ... (остальные базовые настройки: com2sec, group, view, access)
 
 config exec
-        option name     'ups'
-        option prog     '/tmp/ups_reader'
+        option name     'Arduino-ups-mon'
+        option prog     '/usr/bin/ups_reader'
         option miboid   '.1.3.6.1.4.1.2021.50'
 ```
 
@@ -44,7 +45,7 @@ config exec
 ---
 
 ## 🔍 Проверка (snmpwalk)
-Убедитесь, что `/tmp/ups_reader` существует и имеет права на исполнение.
+Убедитесь, что `/usr/bin/ups_reader` существует и имеет права на исполнение.
 ```bash
 snmpwalk -v 2c -c public <IP_РОУТЕРА> .1.3.6.1.4.1.2021.50
 ```
