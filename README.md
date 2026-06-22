@@ -6,7 +6,9 @@
 *   `arduino_mon/` — Исходный код C и Makefile.
     *   👉 [Инструкция по сборке бинарника](arduino_mon/README.md)
 *   `README.md` — Данный файл.
-
+*   `upsmon.ino` -  Скетч для компиляции в arduino ide ver 2.3.8
+*   `calibrate.md` - Как осуществлять калибровку arduino
+*   `zbx_arduino_mon.yaml` -  Шаблон для мониторинга
 ---
 
 ## 🛠 Настройка SNMPD на OpenWrt 25+ (apk)
